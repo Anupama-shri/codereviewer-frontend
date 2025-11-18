@@ -9,9 +9,7 @@ import axios from "axios";
 import { use } from "react";
 
 const App = () => {
-  const [code, setCode] = useState(`function sum(){
-  return 1+1;
-  }`);
+  const [code, setCode] = useState(``);
 
   useEffect(() => {
     prism.highlightAll();
