@@ -9,7 +9,7 @@ import axios from "axios";
 import { use } from "react";
 
 const App = () => {
-  const [code, setCode] = useState(`// Write your code here`);
+  const [code, setCode] = useState(`// Write your code here\n`);
 
   useEffect(() => {
     prism.highlightAll();
