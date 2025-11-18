@@ -1,30 +1,29 @@
-import React , { useState , useEffect } from 'react'
-import "prismjs/themes/prism-tomorrow.css"
-import Editor from "react-simple-code-editor"
-import prism from "prismjs"
-import Markdown from "react-markdown"
+import React, { useState, useEffect } from "react";
+import "prismjs/themes/prism-tomorrow.css";
+import Editor from "react-simple-code-editor";
+import prism from "prismjs";
+import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
-import axios from 'axios'
-import { use } from 'react'
-
+import axios from "axios";
+import { use } from "react";
 
 const App = () => {
-
-  const [code , setCode] = useState(`function sum(){
+  const [code, setCode] = useState(`function sum(){
   return 1+1;
   }`);
 
   useEffect(() => {
     prism.highlightAll();
-    
   });
 
- const [review , setReview] = useState(``);
+  const [review, setReview] = useState(``);
 
   async function reviewCode() {
-   const response = await axios.post('http://localhost:3000/ai/get-review' , {code});
-  
+    const response = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/ai/get-review`,
+      { code }
+    );
 
     setReview(response.data);
   }
@@ -33,10 +32,12 @@ const App = () => {
       <main>
         <div className="left overflow-hidden p-0">
           <div className="code h-full w-full bg-black">
-              <Editor
+            <Editor
               value={code}
-              onValueChange={code => setCode(code)}
-              highlight={code => prism.highlight(code, prism.languages.javascript, "javascript")}
+              onValueChange={(code) => setCode(code)}
+              highlight={(code) =>
+                prism.highlight(code, prism.languages.javascript, "javascript")
+              }
               padding={10}
               style={{
                 fontFamily: '"Fira code", "Fira Mono", monospace',
@@ -44,25 +45,20 @@ const App = () => {
                 border: "1px solid #ddd",
                 borderRadius: "5px",
                 height: "100%",
-                width: "100%"
+                width: "100%",
               }}
             />
           </div>
-          <div
-           onClick={reviewCode}
-          className="submit">Submit</div>
+          <div onClick={reviewCode} className="submit">
+            Submit
+          </div>
         </div>
         <div className="right">
-          <Markdown
-
-            rehypePlugins={[ rehypeHighlight ]}
-
-          >{review}</Markdown>
+          <Markdown rehypePlugins={[rehypeHighlight]}>{review}</Markdown>
         </div>
       </main>
     </>
-  )
-}
+  );
+};
 
-
-export default App
+export default App;
