@@ -3,7 +3,6 @@ import Editor from "@monaco-editor/react";
 import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
-import axios from "axios";
 
 const App = () => {
   const [code, setCode] = useState(`// Write your code here\n`);
@@ -12,25 +11,19 @@ const App = () => {
 
   const reviewRef = useRef(null);
 
-  // --------------------------
-  // 📌 COPY OUTPUT
-  // --------------------------
+  // COPY
   const copyToClipboard = () => {
     navigator.clipboard.writeText(review);
     alert("Copied!");
   };
 
-  // --------------------------
-  // 📌 PASTE INPUT
-  // --------------------------
+  // PASTE
   const pasteFromClipboard = async () => {
     const text = await navigator.clipboard.readText();
     setCode(text);
   };
 
-  // --------------------------
-  // 📌 STREAMING AI RESPONSE
-  // --------------------------
+  // STREAMING AI RESPONSE
   const reviewCode = async () => {
     setLoading(true);
     setReview("");
@@ -59,45 +52,44 @@ const App = () => {
   };
 
   return (
-    <>
-      <main>
-        {/* ---------------- LEFT SECTION ---------------- */}
-        <div className="left">
-          <div className="topButtons">
-            <button onClick={pasteFromClipboard}>📥 Paste</button>
-            <button onClick={reviewCode} disabled={loading}>
-              {loading ? "⏳ Reviewing..." : "🚀 Review Code"}
-            </button>
-          </div>
+    <main>
+      {/* LEFT SIDE */}
+      <div className="left">
+        <div className="topButtons">
+          <button onClick={pasteFromClipboard}>📥 Paste</button>
 
-          <div className="editorContainer">
-            <Editor
-              height="100%"
-              theme="vs-dark"
-              language="javascript"
-              value={code}
-              onChange={(val) => setCode(val)}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 15,
-                automaticLayout: true,
-              }}
-            />
-          </div>
+          <button onClick={reviewCode} disabled={loading}>
+            {loading ? "⏳ Reviewing..." : "🚀 Review Code"}
+          </button>
         </div>
 
-        {/* ---------------- RIGHT SECTION ---------------- */}
-        <div className="right">
-          <div className="topButtons">
-            <button onClick={copyToClipboard}>📋 Copy</button>
-          </div>
-
-          <div ref={reviewRef} className="outputBox">
-            <Markdown rehypePlugins={[rehypeHighlight]}>{review}</Markdown>
-          </div>
+        <div className="editorContainer">
+          <Editor
+            height="100%"
+            theme="vs-dark"
+            language="javascript"
+            value={code}
+            onChange={(val) => setCode(val)}
+            options={{
+              minimap: { enabled: false },
+              fontSize: 15,
+              automaticLayout: true,
+            }}
+          />
         </div>
-      </main>
-    </>
+      </div>
+
+      {/* RIGHT SIDE */}
+      <div className="right">
+        <div className="topButtons">
+          <button onClick={copyToClipboard}>📋 Copy</button>
+        </div>
+
+        <div ref={reviewRef} className="outputBox">
+          <Markdown rehypePlugins={[rehypeHighlight]}>{review}</Markdown>
+        </div>
+      </div>
+    </main>
   );
 };
 
