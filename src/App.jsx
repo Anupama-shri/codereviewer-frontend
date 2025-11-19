@@ -1,58 +1,100 @@
-import React, { useState, useEffect } from "react";
-import "prismjs/themes/prism-tomorrow.css";
-import Editor from "react-simple-code-editor";
-import prism from "prismjs";
+import React, { useState, useEffect, useRef } from "react";
+import Editor from "@monaco-editor/react";
 import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
 import axios from "axios";
-import { use } from "react";
 
 const App = () => {
   const [code, setCode] = useState(`// Write your code here\n`);
+  const [review, setReview] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    prism.highlightAll();
-  });
+  const reviewRef = useRef(null);
 
-  const [review, setReview] = useState(``);
+  // --------------------------
+  // 📌 COPY OUTPUT
+  // --------------------------
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(review);
+    alert("Copied!");
+  };
 
-  async function reviewCode() {
-    const response = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL}/ai/get-review`,
-      { code }
+  // --------------------------
+  // 📌 PASTE INPUT
+  // --------------------------
+  const pasteFromClipboard = async () => {
+    const text = await navigator.clipboard.readText();
+    setCode(text);
+  };
+
+  // --------------------------
+  // 📌 STREAMING AI RESPONSE
+  // --------------------------
+  const reviewCode = async () => {
+    setLoading(true);
+    setReview("");
+
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/ai/stream-review`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      }
     );
 
-    setReview(response.data);
-  }
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      setReview((prev) => prev + chunk);
+    }
+
+    setLoading(false);
+  };
+
   return (
     <>
       <main>
-        <div className="left overflow-hidden p-0">
-          <div className="code h-full w-full bg-black">
+        {/* ---------------- LEFT SECTION ---------------- */}
+        <div className="left">
+          <div className="topButtons">
+            <button onClick={pasteFromClipboard}>📥 Paste</button>
+            <button onClick={reviewCode} disabled={loading}>
+              {loading ? "⏳ Reviewing..." : "🚀 Review Code"}
+            </button>
+          </div>
+
+          <div className="editorContainer">
             <Editor
+              height="100%"
+              theme="vs-dark"
+              language="javascript"
               value={code}
-              onValueChange={(code) => setCode(code)}
-              highlight={(code) =>
-                prism.highlight(code, prism.languages.javascript, "javascript")
-              }
-              padding={10}
-              style={{
-                fontFamily: '"Fira code", "Fira Mono", monospace',
-                fontSize: 16,
-                border: "1px solid #ddd",
-                borderRadius: "5px",
-                height: "100%",
-                width: "100%",
+              onChange={(val) => setCode(val)}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 15,
+                automaticLayout: true,
               }}
             />
           </div>
-          <div onClick={reviewCode} className="submit">
-            Submit
-          </div>
         </div>
+
+        {/* ---------------- RIGHT SECTION ---------------- */}
         <div className="right">
-          <Markdown rehypePlugins={[rehypeHighlight]}>{review}</Markdown>
+          <div className="topButtons">
+            <button onClick={copyToClipboard}>📋 Copy</button>
+          </div>
+
+          <div ref={reviewRef} className="outputBox">
+            <Markdown rehypePlugins={[rehypeHighlight]}>{review}</Markdown>
+          </div>
         </div>
       </main>
     </>
