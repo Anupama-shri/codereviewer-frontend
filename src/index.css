@@ -1,69 +1,42 @@
-@import "tailwindcss";
-
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body, #root {
-  width: 100%;
+html,
+body,
+#root {
   height: 100%;
 }
 
-main {
-  display: flex;
-  width: 100%;
+.container {
+  display: grid;
+  grid-template-columns: 50% 1fr;
   height: 100%;
-  padding: 1rem;
-  gap: 0;
-  background-color: rgba(0, 0, 0, 0.638);
+  background: #111;
   overflow: hidden;
 }
 
-/* LEFT PANEL */
-.left {
+/* LEFT & RIGHT PANELS */
+.left,
+.right {
   height: 100%;
-  background-color: #1e1e1e;
-  border-radius: 0.5rem 0 0 0.5rem;
-  overflow: hidden;
+  background: #1e1e1e;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
 }
 
-/* RIGHT PANEL */
-.right {
-  height: 100%;
-  background-color: #2e2e2e;
-  border-radius: 0 0.5rem 0.5rem 0;
-  overflow: auto;
-  padding: 1rem 2rem;
-  color: white;
-}
-
-/* DRAG BAR */
-.resizer {
-  width: 6px;
-  background-color: #444;
-  cursor: col-resize;
-  transition: background 0.2s;
-}
-
-.resizer:hover {
-  background-color: #666;
-}
-
-/* BUTTONS */
 .topButtons {
+  padding: 8px;
   display: flex;
   gap: 10px;
-  padding: 0.5rem;
 }
 
 .topButtons button {
-  padding: 6px 14px;
-  background: #444;
-  color: white;
+  padding: 6px 12px;
+  font-size: 14px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
@@ -71,4 +44,24 @@ main {
 
 .editorContainer {
   flex: 1;
+}
+
+.outputBox {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  background: #2d2d2d;
+  color: white;
+}
+
+/* DRAG HANDLE */
+.dragDivider {
+  width: 5px;
+  cursor: col-resize;
+  background: #444;
+  transition: background 0.2s;
+}
+
+.dragDivider:hover {
+  background: #666;
 }
