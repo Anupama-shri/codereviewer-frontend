@@ -3,74 +3,79 @@ import Editor from "@monaco-editor/react";
 import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
-import * as monaco from "monaco-editor";
-
-monaco.editor.defineTheme("myTheme", {
-  base: "vs-dark",
-  inherit: true,
-  rules: [],
-  colors: {
-    "editorSuggestWidget.background": "#252526",
-    "editorSuggestWidget.foreground": "#d4d4d4",
-    "editorSuggestWidget.highlightForeground": "#c586c0",
-    "editorSuggestWidget.selectedBackground": "#062f4a",
-  },
-});
+import "./app.css"; // your CSS file
 
 const App = () => {
   const [code, setCode] = useState(`// Write your code here\n`);
   const [review, setReview] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [leftWidth, setLeftWidth] = useState(50); // percentage
-  const isDragging = useRef(false);
+  const dividerRef = useRef(null);
+  const containerRef = useRef(null);
 
-  const startDrag = () => {
-    isDragging.current = true;
+  // --------------------------
+  // 📌 COPY OUTPUT
+  // --------------------------
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(review);
+    alert("Copied!");
   };
 
-  const stopDrag = () => {
-    isDragging.current = false;
+  // --------------------------
+  // 📌 PASTE INPUT
+  // --------------------------
+  const pasteFromClipboard = async () => {
+    const text = await navigator.clipboard.readText();
+    setCode(text);
   };
 
-  const onDrag = (e) => {
-    if (!isDragging.current) return;
-    const newWidth = (e.clientX / window.innerWidth) * 100;
-    if (newWidth > 20 && newWidth < 80) {
-      setLeftWidth(newWidth);
-    }
-  };
-
+  // --------------------------
+  // 📌 NORMAL (Non-Streaming) API CALL
+  // --------------------------
   const reviewCode = async () => {
     setLoading(true);
-    setReview("");
-
     const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/ai/get-review`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
     });
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      setReview((prev) => prev + decoder.decode(value));
-    }
-
+    const text = await response.text();
+    setReview(text);
     setLoading(false);
   };
 
+  // --------------------------
+  // 📌 RESIZABLE PANELS
+  // --------------------------
+  const startDragging = (e) => {
+    e.preventDefault();
+
+    const containerWidth = containerRef.current.offsetWidth;
+
+    const onMouseMove = (e) => {
+      const newLeftWidth = (e.clientX / containerWidth) * 100;
+
+      if (newLeftWidth > 20 && newLeftWidth < 80) {
+        containerRef.current.style.gridTemplateColumns = `${newLeftWidth}% 1fr`;
+      }
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
+
   return (
-    <main onMouseMove={onDrag} onMouseUp={stopDrag}>
-      {/* LEFT PANEL */}
-      <div className="left" style={{ width: `${leftWidth}%` }}>
+    <main ref={containerRef} className="container">
+      {/* LEFT SIDE */}
+      <div className="left">
         <div className="topButtons">
-          <button onClick={() => navigator.clipboard.readText().then(setCode)}>
-            📥 Paste
-          </button>
+          <button onClick={pasteFromClipboard}>📥 Paste</button>
 
           <button onClick={reviewCode} disabled={loading}>
             {loading ? "⏳ Reviewing..." : "🚀 Review Code"}
@@ -83,7 +88,7 @@ const App = () => {
             language="javascript"
             theme="vs-dark"
             value={code}
-            onChange={(val) => setCode(val)}
+            onChange={(val) => setCode(val || "")}
             options={{
               minimap: { enabled: false },
               fontSize: 15,
@@ -95,19 +100,17 @@ const App = () => {
         </div>
       </div>
 
-      {/* DRAG BAR */}
+      {/* DRAG DIVIDER */}
       <div
-        className="resizer"
-        onMouseDown={startDrag}
-        onMouseUp={stopDrag}
+        ref={dividerRef}
+        className="dragDivider"
+        onMouseDown={startDragging}
       ></div>
 
-      {/* RIGHT PANEL */}
-      <div className="right" style={{ width: `${100 - leftWidth}%` }}>
+      {/* RIGHT SIDE */}
+      <div className="right">
         <div className="topButtons">
-          <button onClick={() => navigator.clipboard.writeText(review)}>
-            📋 Copy
-          </button>
+          <button onClick={copyToClipboard}>📋 Copy</button>
         </div>
 
         <div className="outputBox">
