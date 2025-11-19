@@ -29,7 +29,7 @@ const App = () => {
     setReview("");
 
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/ai/stream-review`,
+      `${import.meta.env.VITE_BACKEND_URL}/ai/get-review`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
